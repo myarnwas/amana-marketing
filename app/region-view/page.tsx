@@ -5,6 +5,46 @@ import { Footer } from '../../src/components/ui/footer';
 import { Table} from '../../src/components/ui/table'; 
 import { CardMetric} from '../../src/components/ui/card-metric'; 
 import { BarChart } from '../../src/components/ui/bar-chart'; 
+import { LineChart } from '../../src/components/ui/charts/LineChart';
+import { BubbleMap } from '../../src/components/ui/charts/BubbleMap';
+
+// دالة لمعالجة البيانات الأسبوعية
+interface ProcessedWeek {
+  week: string;
+  revenue: number;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+}
+
+const processWeeklyData = (campaigns: Campaign[]): ProcessedWeek[] => {
+  const weekMap: { [key: string]: ProcessedWeek } = {};
+  
+  campaigns.forEach((campaign: Campaign) => {
+    campaign.weekly_performance.forEach((week: any) => {
+      if (!weekMap[week.week]) {
+        weekMap[week.week] = {
+          week: week.week,
+          revenue: 0,
+          spend: 0,
+          impressions: 0,
+          clicks: 0,
+          conversions: 0
+        };
+      }
+      
+      weekMap[week.week].revenue += week.revenue || 0;
+      weekMap[week.week].spend += week.spend || 0;
+      weekMap[week.week].impressions += week.impressions || 0;
+      weekMap[week.week].clicks += week.clicks || 0;
+      weekMap[week.week].conversions += week.conversions || 0;
+    });
+  });
+  
+  return Object.values(weekMap).sort((a, b) => new Date(a.week).getTime() - new Date(b.week).getTime());
+};
+
 // تعريف الأنواع
 interface RegionalPerformance {
   region: string;
@@ -74,7 +114,12 @@ const campaignData = {
         {"region": "Kuwait City", "country": "Kuwait", "impressions": 4160, "clicks": 83, "conversions": 9, "spend": 14.42, "revenue": 1935.36, "ctr": 2, "conversion_rate": 10.84, "cpc": 0.17, "cpa": 1.6, "roas": 134.21},
         {"region": "Manama", "country": "Bahrain", "impressions": 2080, "clicks": 42, "conversions": 4, "spend": 7.21, "revenue": 967.68, "ctr": 2.02, "conversion_rate": 9.52, "cpc": 0.17, "cpa": 1.8, "roas": 134.21}
       ],
-      "weekly_performance": []
+      "weekly_performance": [
+        {"week": "2024-01-01", "revenue": 4233.6, "spend": 31.54, "impressions": 9100, "clicks": 182, "conversions": 19},
+        {"week": "2024-01-08", "revenue": 4233.6, "spend": 31.54, "impressions": 9100, "clicks": 182, "conversions": 19},
+        {"week": "2024-01-15", "revenue": 4233.6, "spend": 31.54, "impressions": 9100, "clicks": 182, "conversions": 19},
+        {"week": "2024-01-22", "revenue": 4233.6, "spend": 31.54, "impressions": 9100, "clicks": 182, "conversions": 19}
+      ]
     },
     {
       "id": 2,
@@ -88,7 +133,12 @@ const campaignData = {
         {"region": "Kuwait City", "country": "Kuwait", "impressions": 8556, "clicks": 171, "conversions": 1, "spend": 259.14, "revenue": 257.4, "ctr": 2, "conversion_rate": 0.58, "cpc": 1.52, "cpa": 259.14, "roas": 0.99},
         {"region": "Manama", "country": "Bahrain", "impressions": 4278, "clicks": 85, "conversions": 1, "spend": 129.57, "revenue": 128.7, "ctr": 1.99, "conversion_rate": 1.18, "cpc": 1.52, "cpa": 129.57, "roas": 0.99}
       ],
-      "weekly_performance": []
+      "weekly_performance": [
+        {"week": "2024-01-01", "revenue": 563.06, "spend": 566.87, "impressions": 18716, "clicks": 373, "conversions": 3},
+        {"week": "2024-01-08", "revenue": 563.06, "spend": 566.87, "impressions": 18716, "clicks": 373, "conversions": 3},
+        {"week": "2024-01-15", "revenue": 563.06, "spend": 566.87, "impressions": 18716, "clicks": 373, "conversions": 3},
+        {"week": "2024-01-22", "revenue": 563.06, "spend": 566.87, "impressions": 18716, "clicks": 373, "conversions": 3}
+      ]
     },
     {
       "id": 3,
@@ -102,9 +152,13 @@ const campaignData = {
         {"region": "Kuwait City", "country": "Kuwait", "impressions": 3595, "clicks": 102, "conversions": 3, "spend": 71.04, "revenue": 1433.76, "ctr": 2.84, "conversion_rate": 2.94, "cpc": 0.7, "cpa": 23.68, "roas": 20.18},
         {"region": "Manama", "country": "Bahrain", "impressions": 1797, "clicks": 51, "conversions": 2, "spend": 35.52, "revenue": 716.88, "ctr": 2.84, "conversion_rate": 3.92, "cpc": 0.7, "cpa": 17.76, "roas": 20.18}
       ],
-      "weekly_performance": []
+      "weekly_performance": [
+        {"week": "2024-01-01", "revenue": 3136.35, "spend": 155.4, "impressions": 7863, "clicks": 224, "conversions": 8},
+        {"week": "2024-01-08", "revenue": 3136.35, "spend": 155.4, "impressions": 7863, "clicks": 224, "conversions": 8},
+        {"week": "2024-01-15", "revenue": 3136.35, "spend": 155.4, "impressions": 7863, "clicks": 224, "conversions": 8},
+        {"week": "2024-01-22", "revenue": 3136.35, "spend": 155.4, "impressions": 7863, "clicks": 224, "conversions": 8}
+      ]
     }
-    // يمكن إضافة المزيد من الحملات هنا حسب الحاجة
   ]
 };
 
@@ -145,6 +199,47 @@ const processRegionalData = (campaigns: Campaign[]): ProcessedRegion[] => {
 
 export default function RegionView() {
   const regionalData = processRegionalData(campaignData.campaigns);
+  const weeklyData = processWeeklyData(campaignData.campaigns);
+
+  // بيانات الرسم البياني الخطي للإيرادات والإنفاق الأسبوعي
+  const lineChartData = {
+    labels: weeklyData.map(week => {
+      const date = new Date(week.week);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }),
+    datasets: [
+      {
+        label: 'Weekly Revenue',
+        data: weeklyData.map(week => week.revenue),
+        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        tension: 0.4,
+        fill: true
+      },
+      {
+        label: 'Weekly Spend',
+        data: weeklyData.map(week => week.spend),
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        tension: 0.4,
+        fill: true
+      }
+    ]
+  };
+
+  // بيانات خريطة الفقاعات للمناطق
+  const bubbleMapData = regionalData.map(region => ({
+    id: region.region,
+    name: region.region,
+    country: region.country,
+    value: region.totalRevenue,
+    spend: region.totalSpend,
+    revenue: region.totalRevenue,
+    impressions: region.totalImpressions,
+    clicks: region.totalClicks,
+    conversions: region.totalConversions,
+    roas: region.totalSpend > 0 ? (region.totalRevenue / region.totalSpend) : 0
+  }));
 
   // إعداد بيانات الرسم البياني الشريطي للمناطق
   const barChartData = regionalData
@@ -165,41 +260,41 @@ export default function RegionView() {
   const tableColumns = [
     {
       key: 'region',
-      header: 'المنطقة',
+      header: 'Region',
       width: '20%',
       sortable: true,
       sortType: 'string' as const
     },
     {
       key: 'country',
-      header: 'البلد',
+      header: 'Country',
       width: '15%',
       sortable: true,
       sortType: 'string' as const
     },
     {
       key: 'totalRevenue',
-      header: 'الإيرادات',
+      header: 'Revenue',
       width: '15%',
       align: 'right' as const,
       sortable: true,
       sortType: 'number' as const,
       render: (value: number) => (
         <span className="text-green-400 font-medium">
-          {value.toLocaleString()} ريال
+          {value.toLocaleString()} SAR
         </span>
       )
     },
     {
       key: 'totalSpend',
-      header: 'الإنفاق',
+      header: 'Spend',
       width: '15%',
       align: 'right' as const,
       sortable: true,
       sortType: 'number' as const,
       render: (value: number) => (
         <span className="text-red-400 font-medium">
-          {value.toLocaleString()} ريال
+          {value.toLocaleString()} SAR
         </span>
       )
     },
@@ -221,7 +316,7 @@ export default function RegionView() {
     },
     {
       key: 'totalConversions',
-      header: 'التحويلات',
+      header: 'Conversions',
       width: '12%',
       align: 'right' as const,
       sortable: true,
@@ -230,7 +325,7 @@ export default function RegionView() {
     },
     {
       key: 'totalClicks',
-      header: 'النقرات',
+      header: 'Clicks',
       width: '11%',
       align: 'right' as const,
       sortable: true,
@@ -259,7 +354,7 @@ export default function RegionView() {
                 Region View
               </h1>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                تحليل أداء الحملات الإعلانية حسب المناطق الجغرافية
+                Marketing campaign performance analysis by geographic regions
               </p>
             </div>
           </div>
@@ -267,42 +362,43 @@ export default function RegionView() {
 
         {/* Content Area */}
         <div className="flex-1 p-4 lg:p-6 overflow-y-auto">
-          {/* البطاقات الإحصائية */}
+          {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <CardMetric
-              title="إجمالي الإيرادات"
+              title="Total Revenue"
               value={campaignData.marketing_stats.total_revenue.toLocaleString()}
               className="border-l-4 border-l-green-500"
             />
             <CardMetric
-              title="إجمالي الإنفاق"
+              title="Total Spend"
               value={campaignData.marketing_stats.total_spend.toLocaleString()}
               className="border-l-4 border-l-red-500"
             />
             <CardMetric
-              title="متوسط العائد على الإنفاق"
+              title="Average ROAS"
               value={`${totalROAS.toFixed(1)}x`}
               className="border-l-4 border-l-blue-500"
             />
             <CardMetric
-              title="أفضل منطقة أداء"
+              title="Top Performing Region"
               value={topRegion?.region || 'N/A'}
               className="border-l-4 border-l-yellow-500"
             />
           </div>
 
+          {/* Line Chart and Regional Performance */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* الرسم البياني الشريطي */}
-            <BarChart
-              title="الإيرادات حسب المنطقة"
-              data={barChartData}
-              height={300}
-              formatValue={(value: number) => `${(value / 1000).toFixed(0)}K`}
-            />
-
-            {/* إحصائيات المناطق */}
+            {/* Line Chart */}
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h2 className="text-lg font-semibold text-white mb-4">أداء المناطق الرئيسية</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Weekly Trends - Revenue vs Spend</h2>
+              <div className="h-80">
+                <LineChart data={lineChartData} />
+              </div>
+            </div>
+
+            {/* Regional Performance */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-4">Top Performing Regions</h2>
               <div className="space-y-4">
                 {regionalData
                   .sort((a: ProcessedRegion, b: ProcessedRegion) => b.totalRevenue - a.totalRevenue)
@@ -337,9 +433,31 @@ export default function RegionView() {
             </div>
           </div>
 
-          {/* جدول البيانات التفصيلي */}
+          {/* Bubble Map */}
+          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Campaign Distribution by Region</h2>
+            <p className="text-gray-400 mb-4">
+              Bubble size represents revenue amount in each region
+            </p>
+            <div className="h-96">
+              <BubbleMap data={bubbleMapData} />
+            </div>
+          </div>
+
+          {/* Bar Chart */}
+          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-6">
+            <h2 className="text-xl font-bold text-white mb-4">Revenue by Region</h2>
+            <BarChart
+              title=""
+              data={barChartData}
+              height={300}
+              formatValue={(value: number) => `${(value / 1000).toFixed(0)}K`}
+            />
+          </div>
+
+          {/* Detailed Data Table */}
           <Table
-            title="تحليل مفصل لكل منطقة"
+            title="Detailed Regional Analysis"
             columns={tableColumns}
             data={regionalData}
             showIndex={true}
@@ -348,10 +466,10 @@ export default function RegionView() {
             className="mt-6"
           />
 
-          {/* إحصائيات إضافية */}
+          {/* Additional Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4">توزيع الظهورات</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Impressions Distribution</h3>
               <div className="space-y-3">
                 {regionalData
                   .sort((a: ProcessedRegion, b: ProcessedRegion) => b.totalImpressions - a.totalImpressions)
@@ -368,7 +486,7 @@ export default function RegionView() {
             </div>
 
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4">معدلات التحويل</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Conversion Rates</h3>
               <div className="space-y-3">
                 {regionalData
                   .filter((region: ProcessedRegion) => region.totalClicks > 0)
@@ -390,7 +508,7 @@ export default function RegionView() {
             </div>
 
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-lg font-semibold text-white mb-4">كفاءة الإنفاق</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Spending Efficiency</h3>
               <div className="space-y-3">
                 {regionalData
                   .sort((a: ProcessedRegion, b: ProcessedRegion) => b.roas - a.roas)
